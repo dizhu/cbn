@@ -20,6 +20,11 @@ def feedback_rows(config, paths):
         if not separator or group not in ('smallFace', 'papaya', 'doz'):
             raise ValueError('反馈参数应使用 smallFace、papaya 或 doz=本地文件.xlsx')
         spec = config.get('feedback', {}).get(group, {})
+        quantity_unit = spec.get('quantityUnit', 'platform')
+        if quantity_unit not in ('platform', 'customer'):
+            raise ValueError(f'{group} 的 quantityUnit 只可为 platform 或 customer')
+        if quantity_unit == 'customer' and not spec.get('quantity'):
+            raise ValueError(f'{group} 的 customer quantityUnit 需要配置已发数量列 quantity')
         table = Table(filename, spec)
         defaults = {'orderId': '客户订单编号' if group == 'doz' else '注文ID',
                     'tracking': '快递单号' if group == 'doz' else '伝票番号',
@@ -54,7 +59,8 @@ def feedback_rows(config, paths):
                 if whole_package and sku_id:
                     raise ValueError('整单同包确认行应使用订单 ID 范围')
                 records.append({'group': group, 'orderId': order_id, 'skuId': sku_id, 'carrier': carrier.strip(),
-                                'tracking': tracking, 'shippedQuantity': count, 'wholePackage': whole_package})
+                                'tracking': tracking, 'shippedQuantity': count, 'wholePackage': whole_package,
+                                'quantityUnit': quantity_unit})
             except ValueError as error:
                 issues.append({'feedbackFile': index, 'row': number, 'orderId': order_id, 'reason': str(error)})
     return records, issues
@@ -134,13 +140,19 @@ def match_order(order_id, booked, pending, returned, manual_orders, invalid):
     covered = {row['skuId'] for row in returned if row['skuId']}
     if len(pending) > 1 and covered != set(live) and not whole:
         return '多 SKU 订单缺少完整的逐 SKU 反馈或整单同包确认'
-    total = sum(row['quantity'] for row in pending)
-    if any(row['shippedQuantity'] is not None and row['shippedQuantity'] !=
-           (live[row['skuId']]['quantity'] if row['skuId'] else total) for row in returned):
-        return '回传数量与待发货平台数量不一致'
+    snapshot = {row['skuId']: row for row in booked}
+    def expected_quantity(record):
+        field = 'customerQuantity' if record.get('quantityUnit') == 'customer' else 'quantity'
+        return snapshot[record['skuId']][field] if record['skuId'] else sum(row[field] for row in booked)
+    if any(row['shippedQuantity'] is not None and row['shippedQuantity'] != expected_quantity(row)
+           for row in returned):
+        return '回传数量与制作批次及当前待发货数量不一致，请核对平台或客户单位'
+    if not whole and any(row.get('quantityUnit') == 'customer' and row['shippedQuantity'] is None
+                         for row in returned):
+        return '客户单位回传缺少已发数量或整单同包确认'
     if not whole and any(row['quantity'] > 1 and not any(
             (record['skuId'] == row['skuId'] or len(pending) == 1 and not record['skuId'])
-            and record['shippedQuantity'] == row['quantity']
+            and record['shippedQuantity'] == expected_quantity(record)
             for record in returned) for row in pending):
         return '订单缺少多件商品的已发数量或整单同包确认'
     return None

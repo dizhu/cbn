@@ -44,7 +44,9 @@
   --out "$WORKSPACE/runs/$TOKYO_DATE/tracking"
 ```
 
-可多次传 `--feedback`，客户名可用 `smallFace`、`papaya`、`doz`。`feedback` 按客户设置表头行、首数据行、`orderId`、`tracking`、`carrier`、`skuId`、`quantity`。数量必须是平台销售单位。已核实整单同包时，用 `wholeOrder.header`、`wholeOrder.value` 指定该列和确认值，该记录按订单填写。
+可多次传 `--feedback`，客户名可用 `smallFace`、`papaya`、`doz`。`feedback` 按客户设置表头行、首数据行、`orderId`、`tracking`、`carrier`、`skuId`、`quantity`。`quantityUnit` 默认 `platform`，表示平台销售单位。物流方按客户商品件数回传时明确配置为 `customer`，同时指定 `quantity` 数量列，程序按该批每个 SKU 的实际换算核对。已核实整单同包时，用 `wholeOrder.header`、`wholeOrder.value` 指定该列和确认值，该记录按订单填写。
+
+例如数字编码商品平台数量为 2、客户数量为 12，配置 `customer` 后回传 12 才通过，上传仍为 2。与不乘 6 的商品同包时分别相加，客户总量为 12+1=13，平台上传数量分别为 2、1。部分件数、非整倍数或错单位不会四舍五入。
 
 `carriers` 是快递公司原文到平台认可值的精确映射。例如测试资料使用测试名称，正式值从该店当前上传模板或后台取证。仅确认整份反馈均用同一业者时设置 `defaultCarrier`。
 

@@ -301,6 +301,48 @@ class Workflow(unittest.TestCase):
         self.assertEqual(sheet['A3'].value, 'Required')
         self.assertIsNone(sheet['A6'].value)
 
+    def test_customer_unit_multi_sku_quantities(self):
+        self.config['feedback']['doz']['quantityUnit'] = 'customer'
+        self.prepare()
+        result, issues = self.shipping([[ID(3), '0003', 'synthetic-carrier', SKU(3), 12],
+                                        [ID(3), '0003', 'synthetic-carrier', SKU(4), 1]])
+        self.assertEqual(result['uploadRows'], 2)
+        self.assertFalse(any(row['orderId'] == ID(3) for row in issues))
+        sheet = load_workbook(self.root / 'tracking/TikTok配送情報.xlsx').active
+        self.assertEqual([sheet['D4'].value, sheet['D5'].value], [2, 1])
+
+    def test_customer_unit_whole_order_uses_each_sku_factor(self):
+        self.config['feedback']['doz']['quantityUnit'] = 'customer'
+        self.prepare()
+        result, _ = self.shipping([[ID(3), '0003', 'synthetic-carrier', None, 13, '已核实']])
+        self.assertEqual(result['uploadRows'], 2)
+        for quantity in [3, 12, 18]:
+            with self.subTest(quantity=quantity):
+                result, issues = self.shipping([[ID(3), '0003', 'synthetic-carrier', None, quantity, '已核实']],
+                                               'wrong-customer-total-' + str(quantity))
+                self.assertEqual(result['uploadRows'], 0)
+                self.assertTrue(any('回传数量' in row['reason'] for row in issues))
+
+    def test_customer_units_reject_partial_and_missing_quantity(self):
+        self.config['feedback']['doz']['quantityUnit'] = 'customer'
+        self.rows[7][HEADERS.index('セラーSKU')] = '00008'
+        self.source = self.source_file('customer-units', self.rows)
+        self.prepare()
+        result, _ = self.shipping([[ID(6), '0006', 'synthetic-carrier', SKU(8), 6]])
+        self.assertEqual(result['uploadRows'], 1)
+        for quantity in [None, 1, 5, 7]:
+            with self.subTest(quantity=quantity):
+                result, issues = self.shipping([[ID(6), '0006', 'synthetic-carrier', SKU(8), quantity]],
+                                               'partial-customer-units-' + str(quantity))
+                self.assertEqual(result['uploadRows'], 0)
+                self.assertTrue(any('数量' in row['reason'] for row in issues))
+
+    def test_unknown_quantity_unit_rejected(self):
+        self.config['feedback']['doz']['quantityUnit'] = 'guessed'
+        self.prepare()
+        with self.assertRaisesRegex(ValueError, 'quantityUnit'):
+            self.shipping([[ID(3), '0003', 'synthetic-carrier', SKU(3), 2]])
+
     def test_multi_sku_requires_evidence(self):
         self.prepare()
         for name, details, expected in [
