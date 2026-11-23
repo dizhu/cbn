@@ -4,6 +4,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -45,6 +46,21 @@ def read_json(path):
 
 def write_json(path, data):
     Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+
+
+@lru_cache(maxsize=1)
+def prefecture_names():
+    result = {}
+    for roman, japanese in read_json(SKILL / 'assets/japan-prefectures.json')['romanToJapanese'].items():
+        for name in (roman, re.sub(r'\s+(?:KEN|FU|TO)$', '', roman)):
+            result[re.sub(r'[\s-]', '', name).upper()] = japanese
+    return result
+
+
+def japanese_prefecture(value):
+    original = text(value)
+    key = re.sub(r'[\s-]', '', normalized(value)).upper()
+    return prefecture_names().get(key, original)
 
 
 def digest(value):
@@ -116,8 +132,9 @@ def business_date(value=None):
 
 
 class Table:
-    def __init__(self, path, spec=None):
+    def __init__(self, path, spec=None, aliases=None):
         spec = spec or {}
+        self.aliases = {header_key(label): values for label, values in (aliases or {}).items()}
         path = Path(path)
         if path.suffix.lower() != '.xlsx':
             raise ValueError('请使用 .xlsx 工作簿')
@@ -150,7 +167,9 @@ class Table:
     def column(self, labels, required=True):
         labels = [labels] if isinstance(labels, str) else labels
         for label in labels:
-            matches = [i for i, value in enumerate(self.headers) if header_key(value) == header_key(label)]
+            names = [label, *self.aliases.get(header_key(label), [])]
+            keys = {header_key(name) for name in names}
+            matches = [i for i, value in enumerate(self.headers) if header_key(value) in keys]
             if len(matches) > 1:
                 raise ValueError(f'表头重复（{label}）')
             if matches:

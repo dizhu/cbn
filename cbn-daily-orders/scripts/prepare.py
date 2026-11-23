@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from openpyxl.utils import column_index_from_string
 
-from common import (GROUPS, Table, business_date, digest, header_key, identifier, normalized,
+from common import (GROUPS, Table, business_date, digest, header_key, identifier, japanese_prefecture, normalized,
                     output_run, phone, positive_int, postal, price, text, write_cell, write_json)
 from ledger import output_group, previous_handoffs, row_key
 
@@ -20,12 +20,23 @@ CUSTOMER = {'sellerSku': 'セラーSKU', 'unitPrice': 'SKUの元の価格', 'rec
             'phone': '電話番号', 'postalCode': '郵便番号', 'prefecture': '都道府県',
             'city': '市区町村', 'town': '町名', 'address1': '詳細住所1', 'address2': '詳細住所2'}
 PATTERNS = {'smallFace': r'小[顔颜]', 'papaya': '青パパ', 'doz': 'DOZ'}
+EXPORT_HEADERS = {
+    '注文ID': ['Order ID'], '注文状況': ['Order Status'], '注文のサブ状況': ['Order Substatus'],
+    'セラーSKU': ['Seller SKU'], '商品名': ['Product Name'], 'バリエーション': ['Variation'],
+    '数量': ['Quantity'], 'SKUの元の価格': ['SKU Unit Original Price'],
+    'カスタマーのユーザー名': ['Buyer Username'], '受取人': ['Recipient'],
+    '名': ['First name'], '姓': ['Last name'], '国': ['Country'], '郵便番号': ['Zipcode'],
+    '都道府県': ['Prefecture'], '市区町村': ['County'], '町名': ['City/Ward'],
+    '詳細住所1': ['Address Line 1'], '詳細住所2': ['Address Line 2'], '電話番号': ['Phone #'],
+    '配送先情報': ['Shipping Information'], '統合リスト': ['Combined Listing'],
+    'まとめて出品': ['Combined Listing'], 'カスタマーからのメッセージ': ['Buyer Message'],
+}
 
 
 def read_orders(path, spec=None, scope=None):
     spec = dict(spec or {})
     spec.setdefault('firstDataRow', spec.get('headerRow', 1) + 2)
-    table = Table(path, spec)
+    table = Table(path, spec, aliases=EXPORT_HEADERS)
     aliases = spec.get('headers', {})
     cols = {field: table.column(aliases.get(field, label)) for field, label in CORE.items()}
     status = table.column(aliases['status']) if 'status' in aliases else table.column(['注文のサブ状況', '注文状況'], False)
@@ -71,7 +82,12 @@ def customer_order(row, table, aliases):
         if any(re.search(r'[*＊●•]|<redacted>|\bmasked\b', value, re.I)
                for value in [row['recipient'], *parts]):
             raise ValueError('收件资料包含遮蔽内容，请使用完整的订单导出')
-        row['address'] = ''.join(parts)
+        separator = ''
+        if row['group'] == 'doz':
+            domestic = japanese_prefecture(parts[0])
+            if domestic != parts[0]:
+                parts[0], separator = domestic, ' '
+        row['address'] = separator.join(part for part in parts if part)
         if row['group'] == 'doz':
             row['sellerSku'] = identifier(get('sellerSku'), 'セラーSKU')
             row['unitPrice'] = price(get('unitPrice'))
