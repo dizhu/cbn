@@ -1,0 +1,4 @@
+interface:
+  display_name: "CBN 日本站订单处理"
+  short_description: "导出待发货订单，生成四份客户表并核对物流回传、包裹和交接状态"
+  default_prompt: "使用 $cbn-daily-orders 处理今天的待发货订单。"

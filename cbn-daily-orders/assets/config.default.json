@@ -1,0 +1,251 @@
+{
+  "handoff": {
+    "shop": "日本空港ギフト館",
+    "stateFile": "order-handoffs.sqlite"
+  },
+  "templates": {
+    "smallFace": {
+      "reuse": "papaya",
+      "name": "【小顔】注文"
+    },
+    "papaya": {
+      "file": "templates/papaya-orders.xlsx",
+      "name": "【青パパイヤ】注文",
+      "sheet": "OrderSKUList",
+      "preserveLayout": true,
+      "columns": {
+        "B": {
+          "header": "注文ID",
+          "field": "orderId",
+          "required": true
+        },
+        "C": {
+          "header": "SKU ID",
+          "field": "skuId",
+          "required": true
+        },
+        "D": {
+          "header": "商品名",
+          "field": "product",
+          "required": true
+        },
+        "E": {
+          "header": "バリエーション",
+          "source": "バリエーション"
+        },
+        "F": {
+          "header": "数量",
+          "field": "quantity",
+          "required": true
+        },
+        "G": {
+          "header": "カスタマーのユーザー名",
+          "source": "カスタマーのユーザー名",
+          "text": true
+        },
+        "H": {
+          "header": "受取人",
+          "source": "受取人",
+          "required": true
+        },
+        "I": {
+          "header": "名",
+          "source": "名"
+        },
+        "J": {
+          "header": "姓",
+          "source": "姓"
+        },
+        "K": {
+          "header": "国",
+          "source": "国"
+        },
+        "L": {
+          "header": "郵便番号",
+          "source": "郵便番号",
+          "text": true,
+          "required": true
+        },
+        "M": {
+          "header": "都道府県",
+          "source": "都道府県",
+          "required": true
+        },
+        "N": {
+          "header": "市区町村",
+          "source": "市区町村",
+          "required": true
+        },
+        "O": {
+          "header": "町名",
+          "source": "町名"
+        },
+        "P": {
+          "header": "詳細住所1",
+          "source": "詳細住所1"
+        },
+        "Q": {
+          "header": "詳細住所2",
+          "source": "詳細住所2",
+          "optionalSource": true
+        },
+        "R": {
+          "header": "電話番号",
+          "source": "電話番号",
+          "text": true,
+          "required": true
+        },
+        "S": {
+          "header": "配送先情報",
+          "source": "配送先情報"
+        },
+        "T": {
+          "header": "統合リスト",
+          "source": [
+            "統合リスト",
+            "まとめて出品"
+          ]
+        },
+        "U": {
+          "header": "カスタマーからのメッセージ",
+          "source": "カスタマーからのメッセージ",
+          "optionalSource": true
+        }
+      }
+    },
+    "doz": {
+      "file": "templates/doz-orders.xlsx",
+      "name": "【DozoFreesh】注文",
+      "sheet": "订单",
+      "preserveLayout": true,
+      "filterEndColumn": "V",
+      "columns": {
+        "B": {
+          "header": "客户订单编号(必填)",
+          "field": "orderId",
+          "required": true
+        },
+        "D": {
+          "header": "客户商品编码(必填)",
+          "field": "sellerSku",
+          "required": true
+        },
+        "E": {
+          "header": "商品数量(必填)",
+          "field": "quantity",
+          "required": true
+        },
+        "F": {
+          "header": "收件人(必填)",
+          "field": "recipient",
+          "required": true
+        },
+        "G": {
+          "header": "收件人电话(必填)",
+          "field": "phone",
+          "required": true
+        },
+        "H": {
+          "header": "收件人邮编(必填)",
+          "field": "postalCode",
+          "required": true
+        },
+        "I": {
+          "header": "收件人地址(必填)\n（禁止以英文开头）",
+          "field": "address",
+          "required": true
+        },
+        "L": {
+          "header": "店铺名称(发件人)(必填)",
+          "value": "dozofreesh",
+          "required": true
+        },
+        "M": {
+          "header": "快递公司(必填)\n佐川急便   sagawa\nSG-B      sgb\n黑猫宅急便 yamato\n黑猫投函   nekoposu\n日邮3cm   jp3 \n日邮5cm   jp5\n西濃       Seino\n超级西濃   SuperSeino\nゆうメール postmail",
+          "value": "yamato",
+          "required": true
+        },
+        "Q": {
+          "header": "商品价格（单价）",
+          "field": "unitPrice",
+          "required": true
+        },
+        "U": {
+          "header": "",
+          "newHeader": "SKU ID",
+          "width": 25,
+          "field": "skuId",
+          "required": true
+        },
+        "V": {
+          "header": "",
+          "newHeader": "商品名",
+          "width": 46,
+          "field": "product",
+          "required": true
+        }
+      }
+    },
+    "sample": {
+      "file": "templates/doz-samples.xlsx",
+      "name": "【DozoFreesh】サンプル",
+      "sheet": "サンプル",
+      "columns": {
+        "C": {
+          "header": "依頼日",
+          "field": "date",
+          "required": true
+        },
+        "D": {
+          "header": "内容",
+          "field": "sellerSku",
+          "required": true
+        },
+        "E": {
+          "header": "数量",
+          "field": "quantity",
+          "required": true
+        },
+        "F": {
+          "header": "送付先",
+          "field": "recipient",
+          "required": true
+        },
+        "G": {
+          "header": "電話番号",
+          "field": "phone",
+          "required": true
+        },
+        "H": {
+          "header": "〒",
+          "field": "postalCode",
+          "required": true
+        },
+        "I": {
+          "header": "住所",
+          "field": "address",
+          "required": true
+        },
+        "J": {
+          "header": "備考",
+          "field": "orderId",
+          "required": true
+        },
+        "K": {
+          "header": "",
+          "field": "skuId",
+          "required": true
+        },
+        "L": {
+          "header": "",
+          "field": "product",
+          "required": true
+        }
+      }
+    }
+  },
+  "schemaVersion": 1,
+  "pathBase": ".",
+  "carriers": {},
+  "feedback": {}
+}
