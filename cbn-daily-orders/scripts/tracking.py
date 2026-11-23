@@ -138,10 +138,11 @@ def match_order(order_id, booked, pending, returned, manual_orders, invalid):
     if any(row['shippedQuantity'] is not None and row['shippedQuantity'] !=
            (live[row['skuId']]['quantity'] if row['skuId'] else total) for row in returned):
         return '回传数量与待发货平台数量不一致'
-    if len(pending) > 1 and not whole and any(row['quantity'] > 1 and not any(
-            record['skuId'] == row['skuId'] and record['shippedQuantity'] == row['quantity']
+    if not whole and any(row['quantity'] > 1 and not any(
+            (record['skuId'] == row['skuId'] or len(pending) == 1 and not record['skuId'])
+            and record['shippedQuantity'] == row['quantity']
             for record in returned) for row in pending):
-        return '多 SKU 订单缺少多件商品的已发数量'
+        return '订单缺少多件商品的已发数量或整单同包确认'
     return None
 
 

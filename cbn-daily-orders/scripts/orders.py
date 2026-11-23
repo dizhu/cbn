@@ -110,6 +110,10 @@ def cli(argv=None):
 
 if __name__ == '__main__':
     os.umask(0o077)
+    os.environ['PYTHONUTF8'] = '1'
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
     try:
         raise SystemExit(cli())
     except (ValueError, OSError, KeyError, TypeError, sqlite3.Error) as error:

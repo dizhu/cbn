@@ -2,7 +2,7 @@
 
 把版本化 GitHub 安装链接交给 Codex，并说明“安装此 Skill，初始化 CBN 订单工作区，跑完自检”。Codex 可用 skill-installer 安装链接中的 `cbn-daily-orders` 文件夹，随后直接读取安装目录的 `SKILL.md` 执行初始化。本 Skill 在下一轮对话可用 `$cbn-daily-orders` 调用。
 
-`init` 会在客户指定的工作目录创建 `.venv/`、`templates/`、`config.json` 和 `order-handoffs.sqlite`。依赖为锁定版本及 SHA-256 的公开 Python 包。安装日志写到 stderr，业务命令的 stdout 是 JSON。安装路径与工作目录可以包含中文和空格。
+`init` 会在客户指定的工作目录创建 `.cbn-venv/`、`templates/`、`config.json` 和 `order-handoffs.sqlite`。依赖为锁定版本及 SHA-256 的公开 Python 包。安装日志写到 stderr，业务命令的 stdout 是 UTF-8 JSON。安装路径与工作目录可以包含中文和空格，入口会检查依赖完整性并重装损坏的依赖。
 
 ```sh
 "$PYTHON" "$SKILL/scripts/cbn.py" --workspace "$WORKSPACE" init

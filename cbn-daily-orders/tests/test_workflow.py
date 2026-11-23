@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from datetime import datetime
 import json
 from pathlib import Path
@@ -274,8 +275,19 @@ class Workflow(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(reserve, ['customer', 'other']))
         self.assertEqual(sorted(result.returncode for result in results), [0, 1])
-        with sqlite3.connect(self.config['handoff']['stateFile']) as db:
+        with closing(sqlite3.connect(self.config['handoff']['stateFile'])) as db:
             self.assertEqual(db.execute('SELECT COUNT(*),COUNT(DISTINCT batchId) FROM handoffs').fetchone(), (2, 1))
+
+    def test_selected_group_preserves_other_sent_fingerprints(self):
+        self.rows[3][HEADERS.index('SKUの元の価格')] = '0 JPY'
+        self.source = self.source_file('mixed-regular-sample', self.rows)
+        self.prepare(mode='live', groups='sample')
+        self.handoff('reserve', 'sample')
+        self.handoff('confirm', 'sample', reference='synthetic-sample-handoff')
+        result = self.prepare('regular-next-day', mode='live', groups='doz', date='2026-11-10')
+        self.assertEqual(result['handoffReviewRows'], 0)
+        batch = read_json(self.root / 'regular-next-day/batch.json')
+        self.assertTrue(any(row['orderId'] == ID(3) and row['skuId'] == SKU(3) for row in batch['rows']))
 
     def test_multi_sku_complete_quantities(self):
         self.prepare()
@@ -310,6 +322,16 @@ class Workflow(unittest.TestCase):
         self.prepare()
         result, _ = self.shipping([[ID(3), '0003', 'synthetic-carrier', None, 3, '已核实']])
         self.assertEqual(result['uploadRows'], 2)
+
+    def test_single_sku_multiple_units_requires_quantity_evidence(self):
+        self.rows[7][HEADERS.index('数量')] = 2
+        self.source = self.source_file('single-sku-multiple-units', self.rows)
+        self.prepare()
+        result, issues = self.shipping([[ID(6), '0006', 'synthetic-carrier']])
+        self.assertEqual(result['uploadRows'], 0)
+        self.assertTrue(any('缺少多件商品' in row['reason'] for row in issues))
+        result, _ = self.shipping([[ID(6), '0006', 'synthetic-carrier', SKU(8), 2]], 'complete-single-sku')
+        self.assertEqual(result['uploadRows'], 1)
 
     def test_mixed_fulfillment_held(self):
         self.prepare()

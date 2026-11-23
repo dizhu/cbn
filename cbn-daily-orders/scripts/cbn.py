@@ -24,18 +24,26 @@ def main():
     args, remaining = parser.parse_known_args()
     workspace = args.workspace.expanduser().resolve()
     workspace.mkdir(parents=True, exist_ok=True, mode=0o700)
-    env = workspace / '.venv'
+    env = workspace / '.cbn-venv'
     executable = env / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     requirements = (SKILL / 'requirements.txt').read_bytes()
     stamp = env / 'cbn-requirements.txt'
     with exclusive_file(workspace / '.cbn-env.lock'):
         if not executable.is_file():
             venv.EnvBuilder(with_pip=True).create(env)
+        pip_ready = subprocess.run([str(executable), '-m', 'pip', '--version'], check=False,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+        if not pip_ready:
+            venv.EnvBuilder(with_pip=True, clear=True).create(env)
         ready = subprocess.run([str(executable), '-c', 'import openpyxl, defusedxml; assert openpyxl.__version__ == "3.1.5"'],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+                               check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
         if not ready or not stamp.is_file() or stamp.read_bytes() != requirements:
-            subprocess.run([str(executable), '-m', 'pip', 'install', '--disable-pip-version-check', '--require-hashes',
-                            '--only-binary=:all:', '-r', str(SKILL / 'requirements.txt')], check=True, stdout=sys.stderr)
+            install = [str(executable), '-m', 'pip', 'install', '--disable-pip-version-check', '--require-hashes',
+                       '--only-binary=:all:', '-r', str(SKILL / 'requirements.txt')]
+            if not ready:
+                install.append('--force-reinstall')
+            subprocess.run(install, check=True, stdout=sys.stderr)
+            subprocess.run([str(executable), '-c', 'import openpyxl, defusedxml; assert openpyxl.__version__ == "3.1.5"'], check=True)
             stamp.write_bytes(requirements)
     command = [str(executable), str(SKILL / 'scripts/orders.py'), args.command]
     if args.command in {'init', 'doctor'}:
@@ -48,6 +56,10 @@ def main():
 
 if __name__ == '__main__':
     os.umask(0o077)
+    os.environ['PYTHONUTF8'] = '1'
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
     try:
         raise SystemExit(main())
     except (OSError, RuntimeError, subprocess.SubprocessError) as error:

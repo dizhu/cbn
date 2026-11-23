@@ -13,8 +13,11 @@ import shutil
 import tempfile
 import unicodedata
 from zipfile import BadZipFile, ZipFile
+from xml.etree.ElementTree import ParseError
 
+from defusedxml.common import DefusedXmlException
 from openpyxl import load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
 from locks import exclusive_file
 
 
@@ -124,7 +127,10 @@ class Table:
                     raise ValueError('工作簿解压体积超过 150 MB')
         except BadZipFile as error:
             raise ValueError('工作簿损坏，请重新下载完整的 .xlsx 原件') from error
-        self.book = load_workbook(path, data_only=False, keep_links=False)
+        try:
+            self.book = load_workbook(path, data_only=False, keep_links=False)
+        except (BadZipFile, ParseError, DefusedXmlException, InvalidFileException, KeyError, TypeError, ValueError) as error:
+            raise ValueError('工作簿内容损坏或含不支持的 XML，请重新下载完整原件') from error
         name = spec.get('sheet')
         if name and name not in self.book.sheetnames:
             raise ValueError(f'工作表不存在（{name}）')

@@ -4,3 +4,5 @@ __pycache__/
 CBN-orders/
 runs/
 *.sqlite*
+.cbn-venv/
+.ruff_cache/

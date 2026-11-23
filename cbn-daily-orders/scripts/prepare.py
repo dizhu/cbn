@@ -216,7 +216,8 @@ def prepare(config, args):
     table, all_rows = read_orders(args.orders, config.get('orders'), args.source_scope)
     aliases = config.get('orders', {}).get('headers', {})
     selected = [customer_order(row, table, aliases) for row in all_rows if row['group']]
-    specs = {group: template_spec(config, group) for group in enabled
+    needed = set(enabled) | {output_group(row) for row in selected if row_key(row) in previous}
+    specs = {group: template_spec(config, group) for group in needed
              if any(output_group(row) == group for row in selected)}
     held = {}
     for row in selected:

@@ -1,10 +1,12 @@
 """Exercise the actual CLI and preserve clean JSON output and failure behavior."""
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from test_workflow import HEADERS, SCRIPTS, order, write_fixture
 
@@ -38,6 +40,33 @@ class CommandLine(unittest.TestCase):
             self.assertEqual(damaged.returncode, 1)
             self.assertIn('工作簿损坏', damaged.stderr)
             self.assertNotIn('Traceback', damaged.stderr)
+
+    def test_non_utf8_parent_terminal(self):
+        environment = {**os.environ, 'PYTHONIOENCODING': 'ascii', 'PYTHONUTF8': '0'}
+        with tempfile.TemporaryDirectory(prefix='cbn-codec-') as temporary:
+            workspace = Path(temporary) / '客户'
+            result = subprocess.run([sys.executable, str(SCRIPTS / 'orders.py'), 'init', '--workspace', str(workspace)],
+                                    check=False, capture_output=True, encoding='utf-8', env=environment)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(json.loads(result.stdout)['ordersReady'])
+
+    def test_malformed_xml_returns_readable_error(self):
+        with tempfile.TemporaryDirectory(prefix='cbn-xml-') as temporary:
+            root = Path(temporary)
+            original = write_fixture(root / 'original.xlsx', [HEADERS, ['说明'], order(1, 1, '小顔')])
+            corrupt = root / 'corrupt.xlsx'
+            with ZipFile(original) as source, ZipFile(corrupt, 'w', ZIP_DEFLATED) as destination:
+                for entry in source.namelist():
+                    destination.writestr(entry, b'<broken' if entry == 'xl/worksheets/sheet1.xml' else source.read(entry))
+            workspace = root / 'workspace'
+            subprocess.run([sys.executable, str(SCRIPTS / 'orders.py'), 'init', '--workspace', str(workspace)],
+                           check=True, capture_output=True)
+            result = subprocess.run([sys.executable, str(SCRIPTS / 'orders.py'), 'prepare', '--config',
+                                     str(workspace / 'config.json'), '--orders', str(corrupt), '--out', str(root / 'output')],
+                                    check=False, capture_output=True, encoding='utf-8')
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('XML', result.stderr)
+            self.assertNotIn('Traceback', result.stderr)
 
 
 if __name__ == '__main__':
