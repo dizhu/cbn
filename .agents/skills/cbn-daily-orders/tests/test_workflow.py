@@ -28,11 +28,6 @@ HEADERS = ['注文ID', '注文状況', '注文のサブ状況', 'SKU ID', 'セ�
            'SKUの元の価格', 'カスタマーのユーザー名', '受取人', '名', '姓', '国', '郵便番号', '都道府県',
            '市区町村', '町名', '詳細住所1', '詳細住所2', '電話番号', '配送先情報', 'まとめて出品', 'カスタマーからのメッセージ']
 FEEDBACK = ['客户订单编号', '快递单号', '快递公司', 'SKU ID', '已发平台数量', '整单同包']
-ENGLISH_HEADERS = ['Order ID', 'Order Status', 'Order Substatus', 'SKU ID', 'Seller SKU', 'Product Name',
-                   'Variation', 'Quantity', 'SKU Unit Original Price', 'Buyer Username', 'Recipient',
-                   'First name', 'Last name', 'Country', 'Zipcode', 'Prefecture', 'County', 'City/Ward',
-                   'Address Line 1', 'Address Line 2', 'Phone #', 'Shipping Information', 'Combined Listing',
-                   'Buyer Message']
 def ID(value):
     return f'900000000000000{value:03d}'
 
@@ -122,51 +117,6 @@ class Workflow(unittest.TestCase):
         self.assertIsNone(samples['A2'].value)
         papaya = load_workbook(self.root / 'customer/【青パパイヤ】注文-2026-11-09.xlsx').active
         self.assertEqual(papaya['R2'].value, '(+81)090-0000-0001')
-
-    def test_english_export_headers_match_japanese_outputs(self):
-        original = self.prepare()
-        rows = [list(row) for row in self.rows]
-        for row in rows:
-            row[1:3] = ['待发货', '待发货']
-        source = write_fixture(self.root / 'english-export.xlsx', [ENGLISH_HEADERS, ['TikTok Shop field notes'], *rows])
-        result = self.prepare('english', orders=str(source))
-        self.assertEqual(result['customerRows'], original['customerRows'])
-        for filename in result['files']:
-            left = load_workbook(self.root / 'customer' / filename)
-            right = load_workbook(self.root / 'english' / filename)
-            self.assertEqual(left.sheetnames, right.sheetnames)
-            for a, b in zip(left.worksheets, right.worksheets):
-                self.assertEqual(list(a.values), list(b.values))
-        shipment, _ = self.shipping([[ID(3), '0003', 'synthetic-carrier', SKU(3), 2],
-                                     [ID(3), '0003', 'synthetic-carrier', SKU(4), 1]], current=source)
-        self.assertEqual(shipment['uploadRows'], 2)
-
-    def test_bilingual_duplicate_headers_rejected(self):
-        source = write_fixture(self.root / 'ambiguous.xlsx', [HEADERS + ['Order ID'], ['说明'],
-                               *[row + [row[0]] for row in self.rows]])
-        with self.assertRaisesRegex(ValueError, '表头重复'):
-            self.prepare(orders=str(source))
-
-    def test_english_headers_preserve_status_validation(self):
-        rows = [list(row) for row in self.rows]
-        rows[0][2] = 'Shipped'
-        source = write_fixture(self.root / 'english-shipped.xlsx', [ENGLISH_HEADERS, ['Notes'], *rows])
-        with self.assertRaisesRegex(ValueError, '不在待发货'):
-            self.prepare(orders=str(source), source_scope='to-ship')
-
-    def test_roman_prefecture_doz_address_preserves_other_fields(self):
-        for field, value in [('都道府県', 'SAITAMA KEN'), ('市区町村', 'SAITAMA SHI'), ('町名', 'MINAMI KU'),
-                             ('詳細住所1', '1-2-3'), ('詳細住所2', 'テストビル１０３')]:
-            self.rows[2][HEADERS.index(field)] = value
-        source = self.source_file('roman-address', self.rows)
-        original = source.read_bytes()
-        self.prepare(orders=str(source))
-        sheet = load_workbook(self.root / 'customer/【DozoFreesh】注文-2026-11-09.xlsx').active
-        self.assertEqual(sheet['I2'].value, '埼玉県 SAITAMA SHI MINAMI KU 1-2-3 テストビル１０３')
-        self.assertEqual(source.read_bytes(), original)
-        self.rows[2][HEADERS.index('都道府県')] = 'UNKNOWN AREA'
-        with self.assertRaisesRegex(ValueError, '地址首字符'):
-            self.prepare('unknown-province', orders=str(self.source_file('unknown-province', self.rows)))
 
     def test_setup_idempotent(self):
         self.prepare(mode='live')

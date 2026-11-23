@@ -1,7 +1,11 @@
-# 发布验证
+# CBN Skills 验证记录
 
-版本 1.0.3 的自动检查覆盖完整 CLI、三份模板和四种出表、必填校验、日英文导出、官方都道府县名称、长编号文本、电话及全角字符、损坏文件、同目录重试、初始化中断重试、跨日交接状态、附件修改、并发登记、订单改动、包裹数量、平台与客户数量单位及整单同包证据。
+## cbn-daily-orders 1.0.2
 
-[持续集成](https://github.com/dizhu/cbn-order-skill/actions/workflows/verify.yml) 在 Windows、macOS、Linux 上运行，Python 版本为 3.9、3.12、3.14。发布前另有独立 Codex 安装试用，真实历史导出的本地复验不随包分发。
+从已验收版本 1.0.2 迁移到 `.agents/skills/cbn-daily-orders`，21 个 Skill 文件与原版本逐字节一致。项目目录与安装链接按多 Skill 仓库组织。
 
-工作区升级时保留业务配置、模板和交接台账。物流正式对接需要合作方的真实回传格式和同店当前配送业者值，安装后的健康检查会报告缺项。定时运行时间由团队指定。
+本 Skill 的 41 项自检涵盖四种出表、长编号与电话、跨日交接状态、并发登记、附件在预留后被修改、包裹数量、平台与客户数量单位及整单同包证据。CI 在 Windows、macOS、Ubuntu 24.04 与 Python 3.9、3.12、3.14 共九种组合运行。
+
+[订单 Skill CI](https://github.com/dizhu/cbn/actions/workflows/cbn-daily-orders.yml)
+
+真实历史订单复验结果保存在本地。正式物流对接和早晨任务仍需合作方回传、当前店铺模板及团队确认的东京时刻。

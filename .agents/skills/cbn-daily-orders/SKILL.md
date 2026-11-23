@@ -25,7 +25,7 @@ description: 处理 CBN 日本 TikTok Shop 的待发货订单，为小顔、青�
 
 1. 打开 https://seller-jp.tiktok.com/order?order_status%5B%5D=1&selected_sort=1&tab=to_ship ，核对「日本空港ギフト館」和 `発送待ち`（待发货）。需要登录或验证时交用户完成。用户给了原始 Excel 时直接处理该文件，历史复验用文件对应的业务日期。
 2. 在 `エクスポート`（导出）选择 `フィルターされた注文`（已筛选订单）和 Excel，导出并下载本次完成的记录。用筛选条件和生成时间确认文件来源。待发货为零时报告零。保存原件以便核对。
-3. 按 [工作簿处理](references/workbooks.md) 运行 `prepare --mode live`，默认识别日本站导出的日文和英文表头。无状态列时核对来源确为待发货筛选结果，再加 `--source-scope to-ship`。历史验证用 `--mode replay`，选择新的输出目录。
+3. 按 [工作簿处理](references/workbooks.md) 运行 `prepare --mode live`。无状态列时核对来源确为待发货筛选结果，再加 `--source-scope to-ship`。历史验证用 `--mode replay`，选择新的输出目录。
 4. 核对 `summary.json`、生成文件和异常清单。小顔、青パパイヤ、DozoFreesh 正式订单与零元样品各自出表。当日没有该类订单时记录零。已确认交接的商品行跨日排除，发送结果待确认或内容有变的行交运营员核对。
 5. 向客户交接时按 [交接与物流](references/handoff.md) 先登记本次附件，再发送并确认实际结果。`batch.json` 随该批保留。
 

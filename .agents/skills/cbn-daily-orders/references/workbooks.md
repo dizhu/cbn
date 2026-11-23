@@ -33,10 +33,6 @@
 
 `orders` 可指定 `sheet`、`headerRow`、`firstDataRow` 和表头别名 `headers`。默认首行为表头，第二行为 TikTok 说明，第三行起读数据。优先读订单子状态，兼容主状态。
 
-日本站日文与英文表头自动识别，例如 `注文ID / Order ID`、`商品名 / Product Name`、`電話番号 / Phone #`。英文导出的 `Prefecture`、`County`、`City/Ward` 分别对应都道府県、市区町村、町名；`Combined Listing` 对应統合リスト。客户输出仍保留原模板的日文/中文列名及原始文本。相同字段的日英文列同时出现时会报表头重复，需核对来源。状态值仍须属于配置的待发货范围，表头语言和来源声明都不会放宽状态校验。
-
-DOZ 地址遇到已识别的罗马字都道府县时，用随包附带的 47 项官方名称对应转为日文，例如 `TOKYO TO` 转为 `東京都`。转换过的地址以空格连接各段，保留市区、街道和楼宇原文；未知的英文地区名称继续进入错误核对。对应数据来自 [日本郵便罗马字邮编资料](https://www.post.japanpost.jp/service/search/zipcode/download/roman-zip.html)，来源与下载校验值保存在 `assets/japan-prefectures.json`；运行时不向外部查询买家地址。
-
 `templates` 的 `smallFace` 可用 `reuse: "papaya"` 共用列映射。每项的 `file`、`sheet`、`headerRow`、`firstDataRow` 指定模板和行。每个 `columns` 键为列字母，`header` 校验准确表头，取值为 `source`、`field` 或 `value` 之一。`source` 可填优先级别名数组，`text` 保留编号文本，`required` 校验必填，`optionalSource` 允许缺少可选列。需要追加表头时指定 `newHeader` 和空的原 `header`。
 
 ## 快递回填

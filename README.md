@@ -1,17 +1,31 @@
-# CBN 日本站订单处理 Skill
+# CBN 客户 Skills
 
-把下面这句话和安装链接一起发给客户，客户可直接交给 Codex。
+CBN 客户的 Codex Skills 统一在这个项目维护，每个 Skill 有独立目录、版本和安装链接。
 
-> 请安装这个 CBN Skill，初始化订单工作目录并跑完自检。之后帮我处理日本站待发货订单。
+## 可安装的 Skills
 
-[安装 v1.0.3](https://github.com/dizhu/cbn-order-skill/tree/v1.0.3/cbn-daily-orders)
+| Skill | 用途 | 已发布版本 | 安装链接 |
+| --- | --- | --- | --- |
+| `cbn-daily-orders` | 日本 TikTok Shop 每日订单、样品表、跨日交接与物流核对 | 1.0.2 | [安装订单处理 Skill](https://github.com/dizhu/cbn/tree/cbn-daily-orders-v1.0.2/.agents/skills/cbn-daily-orders) |
 
-安装包包含三份空白模板、四类出表配置、跨日交接记录和物流包裹核对。小顔与青パパイヤ共用模板。水果茶样品表按团队流程 PDF 第 19 页的版式制作。
+将安装链接交给 Codex，并说：
 
-首次使用由 Codex 找到 Python 3.9+，自动安装锁定的公开依赖，建立客户工作目录并运行自检。订单、生成文件、交接台账存放在客户工作目录，后续升级继续使用该目录。
+> 请安装这个 Skill，初始化 CBN 订单工作目录并跑完自检。之后帮我处理日本站待发货订单。
 
-支持日本站日文及英文导出表头。客户可给 Codex 原始 Excel，也可让 Codex 在已登录的 Chrome 中导出「日本空港ギフト館」待发货订单。工作日期采用东京时间。四类结果为小顔订单、青パパイヤ订单、DozoFreesh 正式订单和零元样品。
+## 项目目录
 
-物流回填首次需核对合作方回传的列名和快递公司原文，并配置同店当前上传模板认可的配送业者名称。物流数量支持平台销售单位或客户商品件数；按每个 SKU 的换算核对后，上传恢复原平台数量。样例会使用合成物流资料测试匹配、冲突和整单同包。邮件发送、后台回填按用户授权执行。定时任务采用团队指定的东京早晨时刻。
+```text
+.agents/skills/
+  cbn-daily-orders/
+    SKILL.md
+    scripts/
+    assets/
+    references/
+    tests/
+```
 
-[Skill 正文](cbn-daily-orders/SKILL.md) · [安装与升级](cbn-daily-orders/references/install.md) · [工作簿处理](cbn-daily-orders/references/workbooks.md) · [交接与物流](cbn-daily-orders/references/handoff.md)
+后续 Skill 放入 `.agents/skills/<skill-name>/`，并加入上面的目录表。每个 Skill 的发布标签采用 `<skill-name>-v<版本>`，客户安装指定标签下的对应目录。
+
+客户订单原件、生成结果、配置和交接台账保存在客户工作目录。订单 Skill 随包附带三份空白模板及四类出表配置；首次物流对接需要核对实际回传与该店 TikTok 认可的配送业者值。早晨排程使用团队指定的东京时刻。
+
+[订单 Skill 正文](.agents/skills/cbn-daily-orders/SKILL.md) · [安装与升级](.agents/skills/cbn-daily-orders/references/install.md) · [验证记录](VERIFICATION.md)

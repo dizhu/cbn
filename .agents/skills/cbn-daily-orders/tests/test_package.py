@@ -34,16 +34,6 @@ class Package(unittest.TestCase):
                 if not path.startswith(('http:', 'https:', '#')):
                     self.assertTrue((document.parent / path).is_file(), f'{document.name}: {path}')
 
-    def test_official_prefecture_reference(self):
-        data = json.loads((SKILL / 'assets/japan-prefectures.json').read_text(encoding='utf-8'))
-        self.assertTrue(data['source'].startswith('https://www.post.japanpost.jp/'))
-        mapping = data['romanToJapanese']
-        self.assertEqual(len(mapping), 47)
-        self.assertEqual(len(set(mapping.values())), 47)
-        self.assertEqual(mapping['TOKYO TO'], '東京都')
-        self.assertEqual(mapping['NARA KEN'], '奈良県')
-        self.assertEqual(mapping['HOKKAIDO'], '北海道')
-
 
 if __name__ == '__main__':
     unittest.main()

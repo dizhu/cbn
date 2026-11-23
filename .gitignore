@@ -1,8 +1,21 @@
+# Customer data and workspaces
+/local/
+/runs/
+/CBN-orders/
+*.sqlite*
+
+# Local migration archive and business application materials
+/distribution/
+/tiktok-shop-jp/
+
+# Generated runtimes and caches
 __pycache__/
 *.pyc
 .venv/
-CBN-orders/
-runs/
-*.sqlite*
 .cbn-venv/
 .ruff_cache/
+
+# Earlier local implementation retained during migration
+/.agents/skills/cbn-daily-orders/scripts/*.mjs
+/.agents/skills/cbn-daily-orders/scripts/restore-template-layout.py
+/.agents/skills/cbn-daily-orders/examples/
