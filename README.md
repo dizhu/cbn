@@ -4,7 +4,7 @@
 
 > 请安装这个 CBN Skill，初始化订单工作目录并跑完自检。之后帮我处理日本站待发货订单。
 
-[安装 v1.0.1](https://github.com/dizhu/cbn-order-skill/tree/v1.0.1/cbn-daily-orders)
+[安装 v1.0.2](https://github.com/dizhu/cbn-order-skill/tree/v1.0.2/cbn-daily-orders)
 
 安装包包含三份空白模板、四类出表配置、跨日交接记录和物流包裹核对。小顔与青パパイヤ共用模板。水果茶样品表按团队流程 PDF 第 19 页的版式制作。
 

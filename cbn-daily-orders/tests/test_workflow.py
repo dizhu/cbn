@@ -257,6 +257,19 @@ class Workflow(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '台账内容已修改'):
             self.handoff('reserve')
 
+    def test_changed_reserved_attachment_cannot_be_confirmed(self):
+        result = self.prepare(mode='live')
+        self.handoff('reserve', 'smallFace')
+        path = self.root / 'customer' / result['files'][0]
+        original = path.read_bytes()
+        path.write_bytes(original + b'changed after reservation')
+        with self.assertRaisesRegex(ValueError, '附件已变更'):
+            self.handoff('confirm', 'smallFace', reference='synthetic-sent-message')
+        self.assertEqual(self.handoff('release', 'smallFace')['updated'], 2)
+        path.write_bytes(original)
+        self.handoff('reserve', 'smallFace')
+        self.assertEqual(self.handoff('confirm', 'smallFace', reference='synthetic-sent-message')['updated'], 2)
+
     def test_ledger_missing_never_resets(self):
         Path(self.config['handoff']['stateFile']).unlink()
         with self.assertRaisesRegex(ValueError, '台账缺失'):

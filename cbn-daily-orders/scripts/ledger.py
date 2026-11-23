@@ -83,8 +83,8 @@ def update_handoff(config, args):
         if (not name or Path(name).name != name or '\\' in name
                 or not any(output_group(row) == group for row in rows)):
             raise ValueError(f'此批次没有 {group} 的可交接记录')
-        if args.action == 'reserve' and digest((batch_path.parent / name).read_bytes()) != file.get('hash'):
-            raise ValueError(f'{group} 附件已变更，请核对并重新出表')
+        if args.action in ('reserve', 'confirm') and digest((batch_path.parent / name).read_bytes()) != file.get('hash'):
+            raise ValueError(f'{group} 附件已变更，请核对原始批次与实际已发附件后再登记')
     with connect(settings) as db:
         db.execute('BEGIN IMMEDIATE')
         try:
